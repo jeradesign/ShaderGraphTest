@@ -9,13 +9,13 @@ reorder rootPrims = ["Root", "GridMaterial"]
 
 def Xform "Root"
 {
-    reorder nameChildren = ["Sphere_Left", "Sphere_Right", "GridMaterial"]
+    reorder nameChildren = ["Sphere_Left", "Sphere_Right", "GridMaterial", "StripeMaterial"]
     def Sphere "Sphere_Right" (
         active = true
         prepend apiSchemas = ["MaterialBindingAPI"]
     )
     {
-        rel material:binding = </Root/GridMaterial/GridMaterial> (
+        rel material:binding = </Root/StripeMaterial> (
             bindMaterialAs = "weakerThanDescendants"
         )
         double radius = 0.1
@@ -49,6 +49,69 @@ def Xform "Root"
         float3 xformOp:scale = (1, 1, 1)
         float3 xformOp:translate = (0, 0, 0)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+    }
+
+    def Material "StripeMaterial"
+    {
+        token cullMode = "none" (
+            allowedTokens = ["unspecified", "none", "front", "back"]
+        )
+        token outputs:mtlx:surface.connect = </Root/StripeMaterial/PreviewSurface.outputs:out>
+        token outputs:realitykit:vertex
+        float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (391.4336, 218.41406)
+        int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 6
+
+        def Shader "PreviewSurface"
+        {
+            uniform token info:id = "ND_UsdPreviewSurface_surfaceshader"
+            color3f inputs:diffuseColor.connect = </Root/StripeMaterial/IfGreater.outputs:out>
+            float inputs:metallic
+            float inputs:roughness
+            token outputs:out
+            float2 ui:nodegraph:node:pos = (139.88672, 153.91016)
+            int ui:nodegraph:node:stackingOrder = 8
+        }
+
+        def Shader "Position"
+        {
+            uniform token info:id = "ND_position_vector3"
+            float3 outputs:out
+            float2 ui:nodegraph:node:pos = (-327.35156, -72.14453)
+            int ui:nodegraph:node:stackingOrder = 11
+        }
+
+        def Shader "Extract"
+        {
+            uniform token info:id = "ND_extract_vector3"
+            float3 inputs:in.connect = </Root/StripeMaterial/Position.outputs:out>
+            int inputs:index = 0
+            float outputs:out
+            float2 ui:nodegraph:node:pos = (-36.679688, -69.86719)
+            int ui:nodegraph:node:stackingOrder = 27
+        }
+
+        def Shader "Abs"
+        {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </Root/StripeMaterial/Extract.outputs:out>
+            float outputs:out
+            float2 ui:nodegraph:node:pos = (207.48438, -75.83594)
+            int ui:nodegraph:node:stackingOrder = 13
+            string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["outputs:out"]
+        }
+
+        def Shader "IfGreater"
+        {
+            uniform token info:id = "ND_ifgreater_color3"
+            color3f inputs:in1 = (1, 0.14913142, 0) (
+                colorSpace = "srgb_texture"
+            )
+            float inputs:value1 = 0.02
+            prepend float inputs:value2.connect = </Root/StripeMaterial/Abs.outputs:out>
+            color3f outputs:out
+            float2 ui:nodegraph:node:pos = (409.08594, -91.78516)
+            int ui:nodegraph:node:stackingOrder = 33
+        }
     }
 }
 
